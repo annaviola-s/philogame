@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Philosopher's Dilemma</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Roboto&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Playfair Display', serif;
+      background: url('https://plus.unsplash.com/premium_photo-1682308359145-a9b0139e2404?q=80&w=1000&auto=format&fit=crop') no-repeat center center fixed;
+      background-size: cover;
+      color: #2c2c2c;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #fdfdfd;
+      text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.8);
+      margin-bottom: 1.5rem;
+    }
+    .floating {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(4px);
+      margin: 1rem auto;
+      transition: all 0.3s ease-in-out;
+    }
+    .small {
+      max-width: 480px;
+    }
+    .idea-card h3, .idea-card h4 {
+      font-size: 1.1rem;
+      color: #4b2e83;
+      margin-bottom: 0.75rem;
+    }
+    button {
+      font-family: 'Roboto', sans-serif;
+      display: block;
+      width: 100%;
+      margin: 0.4rem 0;
+      padding: 0.7rem 1rem;
+      font-size: 0.95rem;
+      background-color: #e9e1cf;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background-color: #d8c6a9;
+    }
+    .end-message {
+      background-color: #fdf7ed;
+    }
+    #opinion-container {
+      width: 90%;
+      max-width: 380px;
+      margin: 1rem auto 0.3rem auto;
+      height: 20px;
+      background-color: #ccc;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #opinion-bar-fill {
+      height: 100%;
+      width: 50%;
+      background: linear-gradient(to right, #722f37, #f5e8c7, #1f7a8c);
+      transition: width 0.4s ease;
+    }
+    #opinion-labels {
+      display: flex;
+      justify-content: space-between;
+      max-width: 380px;
+      margin: 0 auto;
+      font-size: 0.8rem;
+      font-style: italic;
+      color: #fefefe;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+    }
+    #fame, #round {
+      font-family: 'Roboto', sans-serif;
+      font-size: 1rem;
+      margin: 0.5rem auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Philosopher's Dilemma</h1>
+  <div id="instructions" class="floating small">
+    <h3>Instructions:</h3>
+    <p>Each round, you’ll explore a well-known school of philosophy: Existentialism, Rationalism, Empiricism, Stoicism, or Absurdism.</p>
+    <p>Choose one idea to publish. More popular ideas align with the crowd; radical ones challenge them. Fame increases when you land near public opinion’s center.</p>
+    <p>Learn by doing — and see how your ideas resonate.</p>
+  </div>
+  <p id="round" class="floating small">Round: 1 / 5</p>
+  <div id="opinion-container">
+    <div id="opinion-bar-fill"></div>
+  </div>
+  <div id="opinion-labels">
+    <span>Radical</span>
+    <span>Popular</span>
+  </div>
+  <p id="fame" class="floating small">Fame: 0</p>
+  <div id="idea-list"></div>
+  <br>
+  <button class="floating small" onclick="restartGame()">Restart</button>
+  <script>
+    let publicOpinion = 50;
+    let fame = 0;
+    let round = 1;
+    const maxRounds = 5;
+
+    const schools = [
+      "Existentialism",
+      "Rationalism",
+      "Empiricism",
+      "Stoicism",
+      "Absurdism"
+    ];
+
+    const ideaSets = [
+      [
+        { name: "Life has no inherent meaning, only what we create ourselves.", impact: -20 },
+        { name: "We are free, but that freedom is a burden.", impact: -10 },
+        { name: "You are what you choose to become.", impact: -5 }
+      ],
+      [
+        { name: "Only reason can lead us to truth.", impact: 20 },
+        { name: "Clear thinking is the path to knowledge.", impact: 10 },
+        { name: "Logic is a better guide than emotion.", impact: 5 }
+      ],
+      [
+        { name: "You can't know anything unless you experience it.", impact: -20 },
+        { name: "See it first, then believe it.", impact: -10 },
+        { name: "The senses are our best tools.", impact: -5 }
+      ],
+      [
+        { name: "Ignore pain and pleasure; live with virtue.", impact: 20 },
+        { name: "Control what you can, accept the rest.", impact: 10 },
+        { name: "Peace comes from discipline and reason.", impact: 5 }
+      ],
+      [
+        { name: "Nothing matters. Laugh at the chaos.", impact: -20 },
+        { name: "Find joy despite the meaninglessness.", impact: -10 },
+        { name: "Live honestly, even without answers.", impact: -5 }
+      ]
+    ];
+
+    function publishSubIdea(impact) {
+      if (round > maxRounds) return;
+      publicOpinion += impact;
+      publicOpinion = Math.max(0, Math.min(100, publicOpinion));
+      const sweetSpot = 50;
+      const distance = Math.abs(publicOpinion - sweetSpot);
+      const fameGain = Math.max(0, 10 - distance / 5);
+      fame += Math.round(fameGain);
+      round++;
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("fame").innerText = `Fame: ${fame}`;
+      document.getElementById("round").innerText = `Round: ${round > maxRounds ? maxRounds : round} / ${maxRounds}`;
+      updateOpinionBar();
+      const ideaList = document.getElementById("idea-list");
+      ideaList.innerHTML = "";
+      if (round > maxRounds) {
+        const endMessage = document.createElement("div");
+        endMessage.className = "end-message floating small";
+        const title = document.createElement("h2");
+        title.innerText = `Game Over! Your final fame is ${fame}.`;
+        const result = document.createElement("p");
+        if (fame < 15) {
+          result.innerText = "Your ideas were too far from the public's grasp. Fame eludes you.";
+        } else if (fame < 35) {
+          result.innerText = "You made some waves in the world of thought. A decent showing.";
+        } else {
+          result.innerText = "A philosophical legend! Your words will echo through history.";
+        }
+        endMessage.appendChild(title);
+        endMessage.appendChild(result);
+        ideaList.appendChild(endMessage);
+        return;
+      }
+      const currentSet = ideaSets[round - 1];
+      const schoolName = schools[round - 1];
+      const card = document.createElement("div");
+      card.className = "idea-card floating small";
+      const title = document.createElement("h4");
+      title.innerText = `School of Thought: ${schoolName}`;
+      card.appendChild(title);
+      currentSet.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.innerText = `${choice.name}`;
+        btn.onclick = () => publishSubIdea(choice.impact);
+        card.appendChild(btn);
+      });
+      ideaList.appendChild(card);
+    }
+
+    function updateOpinionBar() {
+      const bar = document.getElementById("opinion-bar-fill");
+      bar.style.width = `${publicOpinion}%`;
+    }
+
+    function restartGame() {
+      publicOpinion = 50;
+      fame = 0;
+      round = 1;
+      updateUI();
+    }
+
+    window.onload = () => updateUI();
+  </script>
+</body>
+</html>
